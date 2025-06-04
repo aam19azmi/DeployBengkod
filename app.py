@@ -49,24 +49,31 @@ def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # Replace "No" dengan "no" khusus untuk kolom yang perlu
+    # Ubah 0/1 ke 'no'/'yes' untuk kolom tertentu
+    yes_no_columns = ['family_history_with_overweight', 'FAVC', 'SMOKE', 'SCC']
+    for col in yes_no_columns:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda x: 'yes' if x in [1, '1', True] else 'no' if x in [0, '0', False] else x)
+
+    # Replace "No" dengan "no" khusus untuk kolom CAEC dan CALC
     for col in ['CAEC', 'CALC']:
         if col in df.columns:
-            df[col] = df[col].str.strip()
-            # Pertahankan nilai lain pakai title case kecuali "No"
-            df[col] = df[col].apply(lambda x: x if x == "No" else x.title())
-            # Lalu ganti "No" jadi "no"
             df[col] = df[col].replace("No", "no")
 
-
-    # Normalisasi kapitalisasi string input (optional)
-    for col in ['Gender', 'MTRANS']:
+    # Normalisasi kapitalisasi string input untuk kolom lain
+    for col in ['Gender', 'CAEC', 'CALC', 'MTRANS']:
         if col in df.columns:
             df[col] = df[col].str.strip().str.title()
 
-    # Label Encoding
+    # Label encoding seperti biasa
     for col, le in label_encoders.items():
         if col in df.columns:
+            # Pastikan tipe string jika kelasnya string
+            if le.classes_.dtype.kind in {'U', 'S', 'O'}:
+                df[col] = df[col].astype(str)
+            else:
+                df[col] = df[col].astype(int)
+
             unseen_labels = set(df[col].unique()) - set(le.classes_)
             if unseen_labels:
                 raise HTTPException(
@@ -75,13 +82,11 @@ def preprocess(input_data: InputData):
                 )
             df[col] = le.transform(df[col])
 
-    # One-hot encoding dan seterusnya...
+    # One-hot encoding dan lain-lain
     df = pd.get_dummies(df)
-
     for col in final_feature_columns:
         if col not in df.columns:
             df[col] = 0
-
     df = df[final_feature_columns]
     df = df[selected_features]
 
