@@ -1,5 +1,6 @@
 import pandas as pd
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -66,9 +67,12 @@ def preprocess(input_data: InputData):
 
 @app.post("/predict")
 def predict(input_data: InputData):
-    X = preprocess(input_data)
-    pred = model.predict(X)
-    return {"prediction": pred[0]}
+    try:
+        X = preprocess(input_data)
+        pred = model.predict(X)
+        return {"prediction": pred[0]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

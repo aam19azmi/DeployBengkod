@@ -1,5 +1,15 @@
-fastapi
-uvicorn[standard]
+numpy
 pandas
 scikit-learn
+matplotlib
+seaborn
+plotly
+imbalanced-learn
 joblib
+xgboost
+lightgbm
+catboost
+ngboost
+shap
+fastapi
+uvicorn
