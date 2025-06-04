@@ -1,15 +1,15 @@
-import pickle
 import pandas as pd
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # ⬅️ Tambahkan ini
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from sklearn.preprocessing import LabelEncoder
 import uvicorn
+import joblib  # <-- Ganti pickle dengan joblib
 
 app = FastAPI(title="Obesity Prediction API")
 
-# Tambahkan konfigurasi CORS ⬇️
+# Tambahkan konfigurasi CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://aam19azmi.github.io"],  # Ganti * jika perlu
@@ -18,17 +18,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load artifacts
-with open('label_encoders.pkl', 'rb') as f:
-    label_encoders = pickle.load(f)
-with open('final_feature_columns.pkl', 'rb') as f:
-    final_feature_columns = pickle.load(f)
-with open('selected_features.pkl', 'rb') as f:
-    selected_features = pickle.load(f)
-with open('scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# Load artifacts menggunakan joblib
+label_encoders = joblib.load('label_encoders.pkl')
+final_feature_columns = joblib.load('final_feature_columns.pkl')
+selected_features = joblib.load('selected_features.pkl')
+scaler = joblib.load('scaler.pkl')
+model = joblib.load('model.pkl')
 
 # Definisikan input data schema
 class InputData(BaseModel):
