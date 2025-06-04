@@ -49,12 +49,22 @@ def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # Normalisasi kapitalisasi string input
-    for col in ['Gender', 'CAEC', 'CALC', 'MTRANS']:
+    # Replace "No" dengan "no" khusus untuk kolom yang perlu
+    for col in ['CAEC', 'CALC']:
+        if col in df.columns:
+            df[col] = df[col].str.strip()
+            # Pertahankan nilai lain pakai title case kecuali "No"
+            df[col] = df[col].apply(lambda x: x if x == "No" else x.title())
+            # Lalu ganti "No" jadi "no"
+            df[col] = df[col].replace("No", "no")
+
+
+    # Normalisasi kapitalisasi string input (optional)
+    for col in ['Gender', 'MTRANS']:
         if col in df.columns:
             df[col] = df[col].str.strip().str.title()
 
-    # Label Encoding: hanya untuk kolom yang benar-benar di-label encode saat training
+    # Label Encoding
     for col, le in label_encoders.items():
         if col in df.columns:
             unseen_labels = set(df[col].unique()) - set(le.classes_)
@@ -65,10 +75,9 @@ def preprocess(input_data: InputData):
                 )
             df[col] = le.transform(df[col])
 
-    # One-hot encoding untuk kolom nominal
+    # One-hot encoding dan seterusnya...
     df = pd.get_dummies(df)
 
-    # Tambahkan kolom dummy yang hilang agar sesuai dengan training set
     for col in final_feature_columns:
         if col not in df.columns:
             df[col] = 0
