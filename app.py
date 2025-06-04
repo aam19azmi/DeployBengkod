@@ -58,10 +58,14 @@ def preprocess(input_data: InputData):
     # Replace "No" dengan "no" khusus untuk kolom CAEC dan CALC
     for col in ['CAEC', 'CALC']:
         if col in df.columns:
+            df[col] = df[col].str.strip()
+            # Pertahankan nilai lain pakai title case kecuali "No"
+            df[col] = df[col].apply(lambda x: x if x == "No" else x.title())
+            # Lalu ganti "No" jadi "no"
             df[col] = df[col].replace("No", "no")
 
     # Normalisasi kapitalisasi string input untuk kolom lain
-    for col in ['Gender', 'CAEC', 'CALC', 'MTRANS']:
+    for col in ['Gender', 'MTRANS']:
         if col in df.columns:
             df[col] = df[col].str.strip().str.title()
 
