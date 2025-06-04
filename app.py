@@ -51,7 +51,15 @@ def preprocess(input_data: InputData):
 
     for col, le in label_encoders.items():
         if col in df.columns:
+            # Cek apakah semua nilai input tersedia di encoder
+            unseen_labels = set(df[col].unique()) - set(le.classes_)
+            if unseen_labels:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Kolom '{col}' mengandung label tidak dikenal: {unseen_labels}"
+                )
             df[col] = le.transform(df[col])
+
 
     df = pd.get_dummies(df)
 
