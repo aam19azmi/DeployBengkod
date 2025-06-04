@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # ⬅️ Tambahkan ini
 from pydantic import BaseModel
 from typing import Optional
+from sklearn.preprocessing import LabelEncoder
 import uvicorn
 
 app = FastAPI(title="Obesity Prediction API")
