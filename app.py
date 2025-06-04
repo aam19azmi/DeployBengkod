@@ -49,12 +49,14 @@ def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
+    # Normalisasi kapitalisasi string input
+    for col in ['Gender', 'MTRANS']:
+        if col in df.columns:
+            df[col] = df[col].str.strip().str.title()
+
+    # Label Encoding: hanya untuk kolom yang benar-benar di-label encode saat training
     for col, le in label_encoders.items():
         if col in df.columns:
-            # Konversi ke huruf kecil untuk string
-            if df[col].dtype == object:
-                df[col] = df[col].str.lower()
-
             unseen_labels = set(df[col].unique()) - set(le.classes_)
             if unseen_labels:
                 raise HTTPException(
@@ -63,8 +65,10 @@ def preprocess(input_data: InputData):
                 )
             df[col] = le.transform(df[col])
 
+    # One-hot encoding untuk kolom nominal
     df = pd.get_dummies(df)
 
+    # Tambahkan kolom dummy yang hilang agar sesuai dengan training set
     for col in final_feature_columns:
         if col not in df.columns:
             df[col] = 0
