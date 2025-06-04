@@ -50,7 +50,7 @@ def preprocess(input_data: InputData):
     df = pd.DataFrame([data_dict])
 
     # Normalisasi kapitalisasi string input
-    for col in ['Gender', 'MTRANS']:
+    for col in ['Gender', 'CAEC', 'CALC', 'MTRANS']:
         if col in df.columns:
             df[col] = df[col].str.strip().str.title()
 
