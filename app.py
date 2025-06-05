@@ -53,10 +53,7 @@ def preprocess(input_data: InputData):
     for col in ['CAEC', 'CALC']:
         if col in df.columns:
             df[col] = df[col].str.strip()
-            # Pertahankan nilai lain pakai title case kecuali "No"
-            df[col] = df[col].apply(lambda x: x if x == "No" else x.title())
-            # Lalu ganti "No" jadi "no"
-            df[col] = df[col].replace("No", "no")
+            df[col] = df[col].str.strip().apply(lambda x: "no" if x.lower() == "no" else x.title())
 
     # Normalisasi kapitalisasi string input untuk kolom lain
     for col in ['Gender', 'MTRANS']:
@@ -99,7 +96,7 @@ def predict(input_data: InputData):
     try:
         X = preprocess(input_data)
         pred = model.predict(X)
-        return {"prediction": pred[0]}
+        return {"prediction": int(pred[0])}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
