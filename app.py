@@ -96,8 +96,18 @@ def predict(input_data: InputData):
     try:
         X = preprocess(input_data)
         pred = model.predict(X)
-        label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
-        return {"prediction": label}
+        # label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
+        # return {"prediction": label}
+        labels_map = {
+            0: "Berat Badan Kurang",
+            1: "Berat Badan Normal",
+            2: "Kelebihan Berat Badan Tingkat I",
+            3: "Kelebihan Berat Badan Tingkat II",
+            4: "Obesitas Tipe I",
+            5: "Obesitas Tipe II",
+            6: "Obesitas Tipe III"
+        }
+        return {"prediction": labels_map[int(pred[0])]}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
