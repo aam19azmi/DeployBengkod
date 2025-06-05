@@ -96,7 +96,8 @@ def predict(input_data: InputData):
     try:
         X = preprocess(input_data)
         pred = model.predict(X)
-        return {"prediction": int(pred[0])}
+        label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
+        return {"prediction": label}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
