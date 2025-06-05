@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from sklearn.preprocessing import LabelEncoder
+import socket
 import uvicorn
 import joblib  # <-- Ganti pickle dengan joblib
 
@@ -111,5 +112,12 @@ def predict(input_data: InputData):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+def find_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))  # minta OS kasih port bebas
+        return s.getsockname()[1]
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = find_free_port()
+    print(f"Running on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
