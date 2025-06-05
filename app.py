@@ -28,32 +28,26 @@ model = joblib.load('model.pkl')
 
 # Definisikan input data schema
 class InputData(BaseModel):
-    Gender: str
+    Gender: str  # {Female,Male}
     Age: float
     Height: float
     Weight: float
-    family_history_with_overweight: int
-    FAVC: int
-    FCVC: int
+    family_history_with_overweight: str  # {yes,no}
+    FAVC: str  # {yes,no}
+    FCVC: float
     NCP: float
-    CAEC: str
-    SMOKE: int
+    CAEC: str  # {no,Sometimes,Frequently,Always}
+    SMOKE: str  # {yes,no}
     CH2O: float
-    SCC: int
+    SCC: str  # {yes,no}
     FAF: float
-    TUE: int
-    CALC: str
-    MTRANS: str
+    TUE: float
+    CALC: str  # {no,Sometimes,Frequently,Always}
+    MTRANS: str  # {Automobile,Motorbike,Bike,Public_Transportation,Walking}
 
 def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
-
-    # Ubah 0/1 ke 'no'/'yes' untuk kolom tertentu
-    yes_no_columns = ['family_history_with_overweight', 'FAVC', 'SMOKE', 'SCC']
-    for col in yes_no_columns:
-        if col in df.columns:
-            df[col] = df[col].apply(lambda x: 'yes' if x in [1, '1', True] else 'no' if x in [0, '0', False] else x)
 
     # Replace "No" dengan "no" khusus untuk kolom CAEC dan CALC
     for col in ['CAEC', 'CALC']:
@@ -68,6 +62,9 @@ def preprocess(input_data: InputData):
     for col in ['Gender', 'MTRANS']:
         if col in df.columns:
             df[col] = df[col].str.strip().str.title()
+
+    for col in ['family_history_with_overweight', 'FAVC', 'SMOKE', 'SCC']:
+        df[col] = df[col].str.strip().str.lower()
 
     # Label encoding seperti biasa
     for col, le in label_encoders.items():
