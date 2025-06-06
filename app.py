@@ -23,7 +23,7 @@ app.add_middleware(
 
 # Load artifacts menggunakan joblib
 label_encoders = joblib.load('label_encoders.pkl')
-final_feature_columns = joblib.load('final_feature_columns.pkl')
+features = joblib.load('features.pkl')
 selected_features = joblib.load('selected_features.pkl')
 scaler = joblib.load('scaler.pkl')
 model = joblib.load('model.pkl')
@@ -67,7 +67,7 @@ def preprocess(input_data: InputData):
     print("DEBUG: Data setelah normalisasi teks:\n", df)
 
     # 2. Drop kolom yang tidak termasuk base_features
-    base_features = set(col.split('_')[0] for col in final_feature_columns)
+    base_features = set(col.split('_')[0] for col in features)
     print("DEBUG: base_features yang diperbolehkan:", base_features)
     df = df[[col for col in df.columns if col in base_features]]
     print("DEBUG: Kolom setelah filter base_features:", df.columns.tolist())
@@ -90,12 +90,15 @@ def preprocess(input_data: InputData):
     print("DEBUG: Kolom setelah one-hot encoding:", df.columns.tolist())
     print("DEBUG: Data setelah one-hot encoding:\n", df)
 
-    # 5. Reindex agar kolom dan urutan sesuai final_feature_columns
-    missing_cols = set(final_feature_columns) - set(df.columns)
-    extra_cols = set(df.columns) - set(final_feature_columns)
+    # 5. Reindex agar kolom dan urutan sesuai features
+    # Pastikan kolom target tidak ikut
+    if 'NObeyesdad' in df.columns:
+        df.drop(columns=['NObeyesdad'], inplace=True)
+    missing_cols = set(features) - set(df.columns)
+    extra_cols = set(df.columns) - set(features)
     print("DEBUG: Kolom hilang sebelum reindex:", missing_cols)
     print("DEBUG: Kolom ekstra sebelum reindex:", extra_cols)
-    df = df.reindex(columns=final_feature_columns, fill_value=0)
+    df = df.reindex(columns=features, fill_value=0)
     print("DEBUG: Kolom setelah reindex:", df.columns.tolist())
 
     # 6. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
@@ -129,6 +132,7 @@ def predict(input_data: InputData):
         pred = model.predict(X)
         raw_label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
         translated_label = translate_label(raw_label)
+        print("DEBUG: Hasil Prediksi: ", translated_label)
         return {"prediction": translated_label}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
