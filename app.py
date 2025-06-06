@@ -63,11 +63,18 @@ def preprocess(input_data: InputData):
     if 'CALC' in df.columns:
         df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
 
-    # 2. Drop kolom yang tidak termasuk base features dari final_feature_columns
+    # 2. Tentukan base features dari final_feature_columns
     base_features = set(col.split('_')[0] for col in final_feature_columns)
+
+    print("DEBUG: base_features:", base_features)
+    print("DEBUG: Kolom input awal:", df.columns.tolist())
+
+    # 3. Drop kolom yang tidak termasuk base_features
     df = df[[col for col in df.columns if col in base_features]]
 
-    # 3. Label encode fitur kategori yang perlu
+    print("DEBUG: Kolom setelah filter base_features:", df.columns.tolist())
+
+    # 4. Label encode fitur kategori yang perlu
     for col, le in label_encoders.items():
         if col in df.columns:
             unseen = set(df[col].astype(str)) - set(le.classes_)
@@ -75,18 +82,31 @@ def preprocess(input_data: InputData):
                 raise HTTPException(status_code=400, detail=f"Unseen label in '{col}': {unseen}")
             df[col] = le.transform(df[col].astype(str))
 
-    # 4. One-hot encoding (misal Gender_0, Gender_1)
-    df = pd.get_dummies(df)
+    print("DEBUG: Kolom setelah label encoding:", df.columns.tolist())
 
-    # 5. Reindex agar kolom dan urutan sesuai final_feature_columns
+    # 5. One-hot encoding (misal Gender_0, Gender_1, MTRANS_0, ...)
+    df = pd.get_dummies(df)
+    print("DEBUG: Kolom setelah one-hot encoding:", df.columns.tolist())
+
+    # 6. Reindex agar kolom dan urutan sesuai final_feature_columns
+    missing_cols = set(final_feature_columns) - set(df.columns)
+    extra_cols = set(df.columns) - set(final_feature_columns)
+
+    print("DEBUG: Kolom hilang sebelum reindex:", missing_cols)
+    print("DEBUG: Kolom ekstra sebelum reindex:", extra_cols)
+
     df = df.reindex(columns=final_feature_columns, fill_value=0)
 
-    # 6. Scaling dengan scaler yang sudah fit
+    print("DEBUG: Kolom setelah reindex:", df.columns.tolist())
+
+    # 7. Scaling dengan scaler yang sudah fit
     X_scaled = scaler.transform(df)
     df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
 
-    # 7. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
+    # 8. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
     df_selected = df_scaled[selected_features]
+
+    print("DEBUG: Kolom fitur yang dipakai model (selected_features):", df_selected.columns.tolist())
 
     return df_selected
 
