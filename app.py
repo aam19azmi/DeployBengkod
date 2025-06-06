@@ -123,7 +123,7 @@ def translate_label(label):
         "Obesity_Type_II": "Obesitas Tipe II",
         "Obesity_Type_III": "Obesitas Tipe III"
     }
-    return mapping.get(label, label).title()
+    return mapping.get(label, label)
 
 @app.post("/predict")
 def predict(input_data: InputData):
