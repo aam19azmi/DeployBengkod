@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -14,7 +15,7 @@ app = FastAPI(title="Obesity Prediction API")
 # Tambahkan konfigurasi CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aam19azmi.github.io/DeployBengkodWebsite"],  # Ganti * jika perlu
+    allow_origins=["https://aam19azmi.github.io"],  # Ganti * jika perlu
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,12 +113,6 @@ def predict(input_data: InputData):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-def find_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))  # minta OS kasih port bebas
-        return s.getsockname()[1]
-
 if __name__ == "__main__":
-    port = find_free_port()
-    print(f"Running on port {port}")
+    port = int(os.environ.get("PORT", 8000))  # 8000 sebagai fallback jika dijalankan lokal
     uvicorn.run(app, host="0.0.0.0", port=port)
