@@ -50,6 +50,8 @@ class InputData(BaseModel):
 def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
+    print("DEBUG: Kolom input awal:", df.columns.tolist())
+    print("DEBUG: Data awal:\n", df)
 
     # 1. Normalisasi teks pada kolom kategori
     if 'Gender' in df.columns:
@@ -62,51 +64,48 @@ def preprocess(input_data: InputData):
         df['CAEC'] = df['CAEC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
     if 'CALC' in df.columns:
         df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
+    print("DEBUG: Data setelah normalisasi teks:\n", df)
 
-    # 2. Tentukan base features dari final_feature_columns
+    # 2. Drop kolom yang tidak termasuk base_features
     base_features = set(col.split('_')[0] for col in final_feature_columns)
-
-    print("DEBUG: base_features:", base_features)
-    print("DEBUG: Kolom input awal:", df.columns.tolist())
-
-    # 3. Drop kolom yang tidak termasuk base_features
+    print("DEBUG: base_features yang diperbolehkan:", base_features)
     df = df[[col for col in df.columns if col in base_features]]
-
     print("DEBUG: Kolom setelah filter base_features:", df.columns.tolist())
 
-    # 4. Label encode fitur kategori yang perlu
+    # 3. Label encode fitur kategori yang perlu (misal Gender, MTRANS)
     for col, le in label_encoders.items():
         if col in df.columns:
             unseen = set(df[col].astype(str)) - set(le.classes_)
             if unseen:
                 raise HTTPException(status_code=400, detail=f"Unseen label in '{col}': {unseen}")
             df[col] = le.transform(df[col].astype(str))
-
     print("DEBUG: Kolom setelah label encoding:", df.columns.tolist())
+    print("DEBUG: Data setelah label encoding:\n", df)
 
-    # 5. One-hot encoding (misal Gender_0, Gender_1, MTRANS_0, ...)
-    df = pd.get_dummies(df)
+    # 4. One-hot encoding hanya untuk fitur kategorikal yang **tidak di-label encode** 
+    dummy_cols = [col for col in df.select_dtypes(include=['object']).columns if col not in label_encoders.keys()]
+    print("DEBUG: Kolom untuk one-hot encoding:", dummy_cols)
+    if dummy_cols:
+        df = pd.get_dummies(df, columns=dummy_cols)
     print("DEBUG: Kolom setelah one-hot encoding:", df.columns.tolist())
+    print("DEBUG: Data setelah one-hot encoding:\n", df)
 
-    # 6. Reindex agar kolom dan urutan sesuai final_feature_columns
+    # 5. Reindex agar kolom dan urutan sesuai final_feature_columns
     missing_cols = set(final_feature_columns) - set(df.columns)
     extra_cols = set(df.columns) - set(final_feature_columns)
-
     print("DEBUG: Kolom hilang sebelum reindex:", missing_cols)
     print("DEBUG: Kolom ekstra sebelum reindex:", extra_cols)
-
     df = df.reindex(columns=final_feature_columns, fill_value=0)
-
     print("DEBUG: Kolom setelah reindex:", df.columns.tolist())
 
-    # 7. Scaling dengan scaler yang sudah fit
+    # 6. Scaling
     X_scaled = scaler.transform(df)
     df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
+    print("DEBUG: Data setelah scaling:\n", df_scaled)
 
-    # 8. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
+    # 7. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
     df_selected = df_scaled[selected_features]
-
-    print("DEBUG: Kolom fitur yang dipakai model (selected_features):", df_selected.columns.tolist())
+    print("DEBUG: Data setelah seleksi fitur:\n", df_selected)
 
     return df_selected
 
