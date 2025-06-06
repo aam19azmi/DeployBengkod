@@ -98,16 +98,16 @@ def preprocess(input_data: InputData):
     df = df.reindex(columns=final_feature_columns, fill_value=0)
     print("DEBUG: Kolom setelah reindex:", df.columns.tolist())
 
-    # 6. Scaling
-    X_scaled = scaler.transform(df)
-    df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
-    print("DEBUG: Data setelah scaling:\n", df_scaled)
-
-    # 7. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
-    df_selected = df_scaled[selected_features]
+    # 6. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
+    df_selected = df[selected_features]
     print("DEBUG: Data setelah seleksi fitur:\n", df_selected)
 
-    return df_selected
+    # 7. Scaling hanya pada fitur yang dipilih
+    X_scaled = scaler.transform(df_selected)
+    df_scaled = pd.DataFrame(X_scaled, columns=selected_features)
+    print("DEBUG: Data setelah scaling:\n", df_scaled)
+
+    return df_scaled
 
 def translate_label(label):
     mapping = {
