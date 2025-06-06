@@ -51,41 +51,36 @@ def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # 1️⃣ Normalisasi format teks
-    for col in ['Gender', 'MTRANS']:
-        df[col] = df[col].str.strip().str.title()  # Capitalize
+    # 1. Normalisasi teks
+    df['Gender'] = df['Gender'].str.strip().str.title()
+    df['family_history_with_overweight'] = df['family_history_with_overweight'].str.strip().str.lower()
+    df['FAVC'] = df['FAVC'].str.strip().str.lower()
+    df['CAEC'] = df['CAEC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
+    df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
 
-    for col in ['family_history_with_overweight', 'FAVC', 'SMOKE', 'SCC']:
-        df[col] = df[col].str.strip().str.lower()  # Lowercase
+    # 2. Drop semua kolom yang tidak dipakai oleh model (hanya keep yang dibutuhkan)
+    used_columns = set([c.split('_')[0] for c in final_feature_columns])  # base column names
+    df = df[[col for col in df.columns if col in used_columns]]
 
-    for col in ['CAEC', 'CALC']:
-        df[col] = df[col].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
-
-    # 2️⃣ Label Encoding untuk kolom yang memang dilatih dengan encoder
+    # 3. Label encode kolom yang memang di-label-encode
     for col, le in label_encoders.items():
         if col in df.columns:
-            unseen_labels = set(df[col].unique()) - set(le.classes_)
-            if unseen_labels:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Kolom '{col}' mengandung label tidak dikenal: {unseen_labels}"
-                )
+            unseen = set(df[col].unique()) - set(le.classes_)
+            if unseen:
+                raise HTTPException(status_code=400, detail=f"Unseen label in '{col}': {unseen}")
             df[col] = le.transform(df[col].astype(str))
 
-    # 3️⃣ One-Hot Encoding untuk fitur nominal (misalnya Gender, MTRANS)
+    # 4. One-hot encoding untuk Gender (jika memang dipakai saat training)
     df = pd.get_dummies(df)
 
-    # 4️⃣ Pastikan semua kolom dari training tersedia
-    for col in final_feature_columns:
-        if col not in df.columns:
-            df[col] = 0
-    df = df[final_feature_columns]  # Susun sesuai urutan yang benar
+    # 5. Pastikan hanya dan tepat urutan final_feature_columns
+    df = df.reindex(columns=final_feature_columns)
 
-    # 5️⃣ Scaling seluruh fitur sesuai training
+    # 6. Scaling
     X_scaled = scaler.transform(df)
     df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
 
-    # 6️⃣ Ambil hanya fitur yang dipilih saat training model akhir
+    # 7. Select final selected features (subset dari final_feature_columns)
     df_selected = df_scaled[selected_features]
 
     return df_selected
