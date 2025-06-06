@@ -48,47 +48,45 @@ class InputData(BaseModel):
     MTRANS: str  # {Automobile,Motorbike,Bike,Public_Transportation,Walking}
 
 def preprocess(input_data: InputData):
+    # 1. Konversi input ke DataFrame
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # 1. Normalisasi teks
-    df['Gender'] = df['Gender'].str.strip().str.title()
-    df['family_history_with_overweight'] = df['family_history_with_overweight'].str.strip().str.lower()
-    df['FAVC'] = df['FAVC'].str.strip().str.lower()
-    df['CAEC'] = df['CAEC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
-    df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
+    # 2. Normalisasi nilai teks (case & whitespace cleaning)
+    if 'Gender' in df.columns:
+        df['Gender'] = df['Gender'].str.strip().str.title()
+    if 'family_history_with_overweight' in df.columns:
+        df['family_history_with_overweight'] = df['family_history_with_overweight'].str.strip().str.lower()
+    if 'FAVC' in df.columns:
+        df['FAVC'] = df['FAVC'].str.strip().str.lower()
+    if 'CAEC' in df.columns:
+        df['CAEC'] = df['CAEC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
+    if 'CALC' in df.columns:
+        df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
 
-    # 2. Drop semua kolom yang tidak dipakai oleh model (hanya keep yang dibutuhkan)
-    base_features = set()
-    for col in final_feature_columns:
-        if '_' in col:
-            base_features.add(col.split('_')[0])
-        else:
-            base_features.add(col)
-    df = df[[col for col in df.columns if col in base_features]]
-    assert set(df.columns) <= set(final_feature_columns), f"Fitur tidak dikenal ditemukan: {set(df.columns) - set(final_feature_columns)}"
-    # Debug
-    print("Fitur setelah filter awal:", df.columns.tolist())
+    # 3. Drop kolom yang tidak digunakan dalam training model
+    allowed_raw_features = set(le_col for le_col in label_encoders.keys()) | set(col for col in df.columns if col in final_feature_columns)
+    df = df[[col for col in df.columns if col in allowed_raw_features]]
 
-    # 3. Label encode kolom yang memang di-label-encode
+    # 4. Encoding: Label Encoding untuk fitur kategorikal
     for col, le in label_encoders.items():
         if col in df.columns:
-            unseen = set(df[col].unique()) - set(le.classes_)
+            unseen = set(df[col].astype(str)) - set(le.classes_)
             if unseen:
                 raise HTTPException(status_code=400, detail=f"Unseen label in '{col}': {unseen}")
             df[col] = le.transform(df[col].astype(str))
 
-    # 4. One-hot encoding untuk Gender (jika memang dipakai saat training)
+    # 5. One-hot encoding (misalnya untuk Gender jika dipakai saat training)
     df = pd.get_dummies(df)
 
-    # 5. Pastikan hanya dan tepat urutan final_feature_columns
-    df = df.reindex(columns=final_feature_columns)
+    # 6. Pastikan hanya dan urutan sesuai dengan final_feature_columns
+    df = df.reindex(columns=final_feature_columns, fill_value=0)
 
-    # 6. Scaling
+    # 7. Scaling
     X_scaled = scaler.transform(df)
     df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
 
-    # 7. Select final selected features (subset dari final_feature_columns)
+    # 8. Pilih subset fitur akhir jika ada fitur seleksi (misal PCA atau RFE)
     df_selected = df_scaled[selected_features]
 
     return df_selected
