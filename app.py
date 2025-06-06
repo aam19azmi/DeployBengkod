@@ -133,6 +133,7 @@ def predict(input_data: InputData):
         pred = model.predict(X)
         raw_label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
         translated_label = translate_label(raw_label)
+        logger.info("DEBUG: Hasil Prediksi: %s", pred)
         logger.info("DEBUG: Hasil Prediksi: %s", translated_label)
         return {"prediction": translated_label}
     except Exception as e:
