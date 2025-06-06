@@ -51,47 +51,44 @@ def preprocess(input_data: InputData):
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # Replace "No" dengan "no" khusus untuk kolom CAEC dan CALC
-    for col in ['CAEC', 'CALC']:
-        if col in df.columns:
-            df[col] = df[col].str.strip()
-            df[col] = df[col].str.strip().apply(lambda x: "no" if x.lower() == "no" else x.title())
-
-    # Normalisasi kapitalisasi string input untuk kolom lain
+    # 1️⃣ Normalisasi format teks
     for col in ['Gender', 'MTRANS']:
-        if col in df.columns:
-            df[col] = df[col].str.strip().str.title()
+        df[col] = df[col].str.strip().str.title()  # Capitalize
 
     for col in ['family_history_with_overweight', 'FAVC', 'SMOKE', 'SCC']:
-        df[col] = df[col].str.strip().str.lower()
+        df[col] = df[col].str.strip().str.lower()  # Lowercase
 
-    # Label encoding seperti biasa
+    for col in ['CAEC', 'CALC']:
+        df[col] = df[col].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
+
+    # 2️⃣ Label Encoding untuk kolom yang memang dilatih dengan encoder
     for col, le in label_encoders.items():
         if col in df.columns:
-            # Pastikan tipe string jika kelasnya string
-            if le.classes_.dtype.kind in {'U', 'S', 'O'}:
-                df[col] = df[col].astype(str)
-            else:
-                df[col] = df[col].astype(int)
-
             unseen_labels = set(df[col].unique()) - set(le.classes_)
             if unseen_labels:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Kolom '{col}' mengandung label tidak dikenal: {unseen_labels}"
                 )
-            df[col] = le.transform(df[col])
+            df[col] = le.transform(df[col].astype(str))
 
-    # One-hot encoding dan lain-lain
+    # 3️⃣ One-Hot Encoding untuk fitur nominal (misalnya Gender, MTRANS)
     df = pd.get_dummies(df)
+
+    # 4️⃣ Pastikan semua kolom dari training tersedia
     for col in final_feature_columns:
         if col not in df.columns:
             df[col] = 0
-    df = df[final_feature_columns]
-    df = df[selected_features]
+    df = df[final_feature_columns]  # Susun sesuai urutan yang benar
 
+    # 5️⃣ Scaling seluruh fitur sesuai training
     X_scaled = scaler.transform(df)
-    return X_scaled
+    df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
+
+    # 6️⃣ Ambil hanya fitur yang dipilih saat training model akhir
+    df_selected = df_scaled[selected_features]
+
+    return df_selected
 
 def translate_label(label):
     mapping = {
