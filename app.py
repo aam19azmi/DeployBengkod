@@ -59,8 +59,16 @@ def preprocess(input_data: InputData):
     df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
 
     # 2. Drop semua kolom yang tidak dipakai oleh model (hanya keep yang dibutuhkan)
-    used_columns = set([c.split('_')[0] for c in final_feature_columns])  # base column names
-    df = df[[col for col in df.columns if col in used_columns]]
+    base_features = set()
+    for col in final_feature_columns:
+        if '_' in col:
+            base_features.add(col.split('_')[0])
+        else:
+            base_features.add(col)
+    df = df[[col for col in df.columns if col in base_features]]
+    assert set(df.columns) <= set(final_feature_columns), f"Fitur tidak dikenal ditemukan: {set(df.columns) - set(final_feature_columns)}"
+    # Debug
+    print("Fitur setelah filter awal:", df.columns.tolist())
 
     # 3. Label encode kolom yang memang di-label-encode
     for col, le in label_encoders.items():
