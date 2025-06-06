@@ -93,23 +93,27 @@ def preprocess(input_data: InputData):
     X_scaled = scaler.transform(df)
     return X_scaled
 
+def translate_label(label):
+    mapping = {
+        "Insufficient_Weight": "Berat Badan Kurang",
+        "Normal_Weight": "Berat Badan Normal",
+        "Overweight_Level_I": "Kelebihan Berat Badan Tingkat I",
+        "Overweight_Level_II": "Kelebihan Berat Badan Tingkat II",
+        "Obesity_Type_I": "Obesitas Tipe I",
+        "Obesity_Type_II": "Obesitas Tipe II",
+        "Obesity_Type_III": "Obesitas Tipe III"
+    }
+    return mapping.get(label, label).replace("_", " ").title()
+
 @app.post("/predict")
 def predict(input_data: InputData):
     try:
         X = preprocess(input_data)
+        print("Input ke model (X):", X)
         pred = model.predict(X)
-        # label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
-        # return {"prediction": label}
-        labels_map = {
-            0: "Berat Badan Kurang",
-            1: "Berat Badan Normal",
-            2: "Kelebihan Berat Badan Tingkat I",
-            3: "Kelebihan Berat Badan Tingkat II",
-            4: "Obesitas Tipe I",
-            5: "Obesitas Tipe II",
-            6: "Obesitas Tipe III"
-        }
-        return {"prediction": labels_map[int(pred[0])]}
+        raw_label = label_encoders['NObeyesdad'].inverse_transform([pred[0]])[0]
+        translated_label = translate_label(raw_label)
+        return {"prediction": translated_label}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
