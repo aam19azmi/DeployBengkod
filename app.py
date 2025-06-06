@@ -48,11 +48,10 @@ class InputData(BaseModel):
     MTRANS: str  # {Automobile,Motorbike,Bike,Public_Transportation,Walking}
 
 def preprocess(input_data: InputData):
-    # 1. Konversi input ke DataFrame
     data_dict = input_data.dict()
     df = pd.DataFrame([data_dict])
 
-    # 2. Normalisasi nilai teks (case & whitespace cleaning)
+    # 1. Normalisasi teks pada kolom kategori
     if 'Gender' in df.columns:
         df['Gender'] = df['Gender'].str.strip().str.title()
     if 'family_history_with_overweight' in df.columns:
@@ -64,11 +63,11 @@ def preprocess(input_data: InputData):
     if 'CALC' in df.columns:
         df['CALC'] = df['CALC'].str.strip().apply(lambda x: 'no' if x.lower() == 'no' else x.title())
 
-    # 3. Drop kolom yang tidak digunakan dalam training model
-    allowed_raw_features = set(le_col for le_col in label_encoders.keys()) | set(col for col in df.columns if col in final_feature_columns)
-    df = df[[col for col in df.columns if col in allowed_raw_features]]
+    # 2. Drop kolom yang tidak termasuk base features dari final_feature_columns
+    base_features = set(col.split('_')[0] for col in final_feature_columns)
+    df = df[[col for col in df.columns if col in base_features]]
 
-    # 4. Encoding: Label Encoding untuk fitur kategorikal
+    # 3. Label encode fitur kategori yang perlu
     for col, le in label_encoders.items():
         if col in df.columns:
             unseen = set(df[col].astype(str)) - set(le.classes_)
@@ -76,17 +75,17 @@ def preprocess(input_data: InputData):
                 raise HTTPException(status_code=400, detail=f"Unseen label in '{col}': {unseen}")
             df[col] = le.transform(df[col].astype(str))
 
-    # 5. One-hot encoding (misalnya untuk Gender jika dipakai saat training)
+    # 4. One-hot encoding (misal Gender_0, Gender_1)
     df = pd.get_dummies(df)
 
-    # 6. Pastikan hanya dan urutan sesuai dengan final_feature_columns
+    # 5. Reindex agar kolom dan urutan sesuai final_feature_columns
     df = df.reindex(columns=final_feature_columns, fill_value=0)
 
-    # 7. Scaling
+    # 6. Scaling dengan scaler yang sudah fit
     X_scaled = scaler.transform(df)
     df_scaled = pd.DataFrame(X_scaled, columns=final_feature_columns)
 
-    # 8. Pilih subset fitur akhir jika ada fitur seleksi (misal PCA atau RFE)
+    # 7. Ambil subset fitur yang dipakai model akhir (jika ada seleksi fitur)
     df_selected = df_scaled[selected_features]
 
     return df_selected
