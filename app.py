@@ -17,7 +17,10 @@ app = FastAPI(title="Obesity Prediction API")
 # Konfigurasi CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aam19azmi.github.io"],
+    allow_origins=[
+        "https://aam19azmi.github.io",                # Domain GitHub Pages default (Jaga-jaga)
+        "https://weightdetection.sourcecodejournal.dev" # <--- TAMBAHKAN INI (Domain Baru)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
