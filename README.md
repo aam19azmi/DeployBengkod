@@ -1,141 +1,126 @@
-# 🍎 Obesity Prediction API
+# 🚀 Obesity Prediction API (Backend)
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688?style=for-the-badge&logo=fastapi)
+![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688?style=for-the-badge&logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker)
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn)
-![Railway](https://img.shields.io/badge/Railway-Deployment-0B0D0E?style=for-the-badge&logo=railway)
 
-**Obesity Prediction API** adalah layanan backend berbasis Machine Learning yang bertugas memprediksi tingkat risiko obesitas seseorang. API ini menerima input berupa data fisik dan kebiasaan gaya hidup, lalu mengembalikan hasil klasifikasi kesehatan.
+Repository ini berisi **Backend REST API** untuk sistem Prediksi Tingkat Obesitas. Dibangun menggunakan **FastAPI** dan dikemas menggunakan **Docker**, API ini melayani permintaan prediksi dari frontend dengan memproses data input, menjalankannya pada model Machine Learning, dan mengembalikan hasil diagnosis dalam Bahasa Indonesia.
 
-Proyek ini merupakan bagian **Backend** dari sistem kalkulator kesehatan.
-👉 **Lihat Frontend Project di sini:** [Obesity Calculator Frontend](https://github.com/aam19azmi/DeployBengkodWebsite)
+👉 **Frontend Repository:** [DeployBengkodWebsite](https://github.com/aam19azmi/DeployBengkodWebsite)
+👉 **Live Demo:** [Lihat Website](https://aam19azmi.github.io)
 
 ---
 
-## 📂 Struktur Proyek
+## 🌟 Fitur Utama
 
-Berikut adalah file-file utama yang digunakan dalam sistem ini:
+* **⚡ High Performance:** Menggunakan FastAPI dan Uvicorn untuk respons super cepat.
+* **🐳 Dockerized:** Siap deploy di mana saja (Railway, AWS, GCP) menggunakan container.
+* **🛡️ Secure CORS:** Dikonfigurasi hanya menerima request dari domain frontend resmi (`aam19azmi.github.io`).
+* **🧠 Smart Preprocessing:** Otomatis menangani normalisasi teks (case-insensitive), One-Hot Encoding, dan penskalaan data sebelum masuk ke model.
+* **🇮🇩 Localized Output:** Hasil prediksi langsung diterjemahkan ke Bahasa Indonesia (contoh: *Obesity_Type_I* $\rightarrow$ *Obesitas Tipe I*).
+
+---
+
+## 🛠️ Tech Stack
+
+* **Framework:** FastAPI
+* **ML Library:** Scikit-learn, Pandas, Joblib
+* **Containerization:** Docker
+* **Server:** Uvicorn
+
+---
+
+## 📂 Struktur File
 
 | File | Deskripsi |
 | :--- | :--- |
-| `app.py` | Entry point utama aplikasi (FastAPI) |
-| `model.pkl` | Model Machine Learning yang sudah dilatih (Pickle format) |
-| `scaler.pkl` | Objek StandardScaler untuk normalisasi data numerik |
-| `label_encoders.pkl` | Encoder untuk mengubah data kategori menjadi angka |
-| `selected_features.pkl` | Daftar 10 fitur prioritas hasil seleksi fitur |
-| `requirements.txt` | Daftar pustaka (library) Python yang dibutuhkan |
+| `Dockerfile` | Konfigurasi image Docker (Python 3.10-slim) |
+| `app.py` | Logika utama API, preprocessing, dan endpoint |
+| `requirements.txt` | Daftar dependensi Python |
+| `*.pkl` | File artifak model ML (Model, Scaler, Encoders) |
 
 ---
 
-## 🧠 Dataset & Fitur (Data Dictionary)
+## 🚀 Instalasi & Menjalankan (Local)
 
-Model ini dilatih menggunakan dataset obesitas dari negara Meksiko, Peru, dan Kolombia. Berikut adalah penjelasan parameter input yang dibutuhkan API:
-
-### Data Fisik
-* **Gender**: `Male` / `Female`
-* **Age**: Usia (Tahun)
-* **Height**: Tinggi Badan (cm)
-* **Weight**: Berat Badan (kg)
-
-### Kebiasaan Makan & Gaya Hidup
-* **family_history_with_overweight**: Riwayat keluarga obesitas (`1` = Ya, `0` = Tidak)
-* **FAVC**: Sering makan makanan tinggi kalori (`1` = Ya, `0` = Tidak)
-* **FCVC**: Konsumsi sayuran (Skala `1-3`)
-* **NCP**: Jumlah makan utama per hari (Skala `1-4`)
-* **CAEC**: Makan di antara waktu makan (*Snacking*)
-    * `no`, `Sometimes`, `Frequently`, `Always`
-* **SMOKE**: Perokok (`1` = Ya, `0` = Tidak)
-* **CH2O**: Konsumsi air harian (Liter, Skala `1-3`)
-* **SCC**: Memantau asupan kalori (`1` = Ya, `0` = Tidak)
-* **FAF**: Frekuensi aktivitas fisik (Skala `0-3`)
-* **TUE**: Waktu penggunaan perangkat teknologi (Skala `0-2`)
-* **CALC**: Konsumsi alkohol (`no`, `Sometimes`, `Frequently`, `Always`)
-* **MTRANS**: Transportasi utama (`Public_Transportation`, `Walking`, `Automobile`, `Motorbike`, `Bike`)
-
----
-
-## 🚀 Instalasi & Menjalankan Lokal
-
-Ikuti langkah ini untuk menjalankan API di komputer Anda:
+Pastikan Anda memiliki Python 3.10+ terinstall.
 
 ### 1. Clone Repository
 ```bash
 git clone [https://github.com/aam19azmi/DeployBengkod.git](https://github.com/aam19azmi/DeployBengkod.git)
 cd DeployBengkod
-2. Buat Virtual Environment (Disarankan)
-Bash
-
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/macOS
-python3 -m venv venv
-source venv/bin/activate
-3. Install Dependencies
+2. Install Dependencies
 Bash
 
 pip install -r requirements.txt
-4. Jalankan Server
+3. Jalankan Server
 Bash
 
 uvicorn app:app --reload
-API akan berjalan di http://127.0.0.1:8000.
+Server akan berjalan di http://127.0.0.1:8000.
+
+🐳 Menjalankan dengan Docker
+Jika Anda tidak ingin menginstall Python secara manual, gunakan Docker:
+
+1. Build Image
+Bash
+
+docker build -t obesity-api .
+2. Run Container
+Bash
+
+docker run -p 8080:8080 obesity-api
+Server akan berjalan di http://127.0.0.1:8080.
 
 📖 Dokumentasi API
-FastAPI menyediakan dokumentasi interaktif secara otomatis. Setelah server berjalan, buka browser dan akses:
+Endpoint: /predict
+Method: POST
 
-Swagger UI: http://127.0.0.1:8000/docs (Untuk mencoba API langsung)
+Description: Menerima data kesehatan dan mengembalikan status berat badan.
 
-ReDoc: http://127.0.0.1:8000/redoc
-
-⚡ Cara Menggunakan (Endpoint)
-Prediksi (POST)
-URL: /predict
-
-Contoh Body (JSON):
-
+Contoh Request Body (JSON)
 JSON
 
 {
-  "Gender": "Female",
-  "Age": 25,
-  "Height": 160,
-  "Weight": 60,
-  "family_history_with_overweight": 1,
-  "FAVC": 1,
-  "FCVC": 2,
-  "NCP": 3,
+  "Gender": "Male",
+  "Age": 24,
+  "Height": 1.75,
+  "Weight": 80,
+  "family_history_with_overweight": "yes",
+  "FAVC": "yes",
+  "FCVC": 2.0,
+  "NCP": 3.0,
   "CAEC": "Sometimes",
-  "SMOKE": 0,
-  "CH2O": 2,
-  "SCC": 0,
-  "FAF": 1,
-  "TUE": 2,
+  "SMOKE": "no",
+  "CH2O": 2.0,
+  "SCC": "no",
+  "FAF": 1.0,
+  "TUE": 1.0,
   "CALC": "Sometimes",
   "MTRANS": "Public_Transportation"
 }
-Contoh Request via cURL:
-
-Bash
-
-curl -X POST "[http://127.0.0.1:8000/predict](http://127.0.0.1:8000/predict)" \
--H "Content-Type: application/json" \
--d '{
-  "Gender": "Female", "Age": 25, "Height": 160, "Weight": 60,
-  "family_history_with_overweight": 1, "FAVC": 1, "FCVC": 2,
-  "NCP": 3, "CAEC": "Sometimes", "SMOKE": 0, "CH2O": 2,
-  "SCC": 0, "FAF": 1, "TUE": 2, "CALC": "Sometimes",
-  "MTRANS": "Public_Transportation"
-}'
-Contoh Response:
-
+Contoh Response (JSON)
 JSON
 
 {
-  "prediction": "Normal Weight"
+  "prediction": "Kelebihan Berat Badan Tingkat I"
 }
-☁️ Deployment
-Proyek ini dikonfigurasi untuk siap di-deploy ke Railway. Pastikan file requirements.txt dan Procfile (jika diperlukan) sudah tersedia.
+☁️ Deployment (Railway)
+Repository ini dirancang untuk deployment otomatis di Railway.
 
-Developed by Azmi Jalaluddin Amron Fullstack Developer & AI Researcher
+Connect GitHub Repository ke Railway.
+
+Railway akan otomatis mendeteksi Dockerfile.
+
+Set variabel port (jika diperlukan), namun Dockerfile sudah mengatur expose port 8080.
+
+Developed by Azmi Jalaluddin Amron
+
+
+### Apa yang saya sesuaikan dari kode kamu?
+
+1.  **Docker Port:** Di `Dockerfile`, kamu menggunakan `CMD` dengan port **8080**. Jadi di panduan Docker saya tulis port 8080. Sedangkan untuk run manual biasa (`uvicorn` tanpa docker), defaultnya 8000.
+2.  **CORS Warning:** Saya menyebutkan bahwa CORS di-set ke `aam19azmi.github.io`. Ini penting agar orang yang mencoba run lokal tahu kenapa mereka mungkin tidak bisa akses dari frontend lokal (`localhost`) kecuali mereka mengubah `app.py` dulu.
+3.  **Input Schema:** Saya menyesuaikan contoh JSON dengan class `InputData` di `app.py`. Perhatikan bahwa `Height` dan `Weight` adalah `float`, dan input teks seperti `yes`/`no` sudah di-handle oleh fungsi `preprocess` kamu (jadi user tidak harus mengetik huruf besar/kecil dengan presisi).
+4.  **Output:** Saya menampilkan contoh output dalam Bahasa Indonesia sesuai fungsi `translate_label`.
