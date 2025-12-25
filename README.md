@@ -8,7 +8,7 @@
 Repository ini berisi **Backend REST API** untuk sistem Prediksi Tingkat Obesitas. Dibangun menggunakan **FastAPI** dan dikemas menggunakan **Docker**, API ini melayani permintaan prediksi dari frontend dengan memproses data input, menjalankannya pada model Machine Learning, dan mengembalikan hasil diagnosis dalam Bahasa Indonesia.
 
 👉 **Frontend Repository:** [DeployBengkodWebsite](https://github.com/aam19azmi/DeployBengkodWebsite)
-👉 **Live Demo:** [Lihat Website](https://aam19azmi.github.io)
+👉 **Live Demo:** [Lihat Website][(.sourcecodejournal.dev)](https://weightdetection.sourcecodejournal.dev/)
 
 ---
 
